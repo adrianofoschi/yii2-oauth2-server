@@ -140,18 +140,18 @@ class Module extends \yii\base\Module
     
     public function getRequest()
     {
-        if(!$this->has('request')) {
-            $this->set('request', Request::createFromGlobals());
+        if(!$this->has('oauth2request')) {
+            $this->set('oauth2request', Request::createFromGlobals());
         }
-        return $this->get('request');
+        return $this->get('oauth2request');
     }
     
     public function getResponse()
     {
-        if(!$this->has('response')) {
-            $this->set('response', new Response());
+        if(!$this->has('oauth2response')) {
+            $this->set('oauth2response', new Response());
         }
-        return $this->get('response');
+        return $this->get('oauth2response');
     }
 
     /**
@@ -181,5 +181,28 @@ class Module extends \yii\base\Module
     public static function t($category, $message, $params = [], $language = null)
     {
         return Yii::t('modules/oauth2/' . $category, $message, $params, $language);
+    }
+
+
+    public function handleAuthorizeRequest($is_authorized, $user_id)
+    {
+        $response = $this->getServer()->handleAuthorizeRequest(
+            $this->getRequest(),
+            $this->getResponse(),
+            $is_authorized,
+            $user_id
+        );
+        $this->setResponse($response);
+
+        return $response;
+    }
+
+    public function setResponse($response)
+    {
+        Yii::$app->response->setStatusCode($response->getStatusCode());
+        $headers = Yii::$app->response->getHeaders();
+
+        foreach ($response->getHttpHeaders() as $name => $value)
+            $headers->set($name, $value);
     }
 }
